@@ -389,6 +389,9 @@ async function analyzeCoin(symbol) {
   };
 }
 
+
+let latestAnalyses = [];
+
 async function refreshSignals() {
   const container = document.getElementById('signals-list');
   if (!container) return;
@@ -399,6 +402,10 @@ async function refreshSignals() {
   const results = await Promise.allSettled(
     symbols.map(symbol => analyzeCoin(symbol))
   );
+
+  latestAnalyses = results
+    .filter(result => result.status === 'fulfilled')
+    .map(result => result.value);
 
   container.innerHTML = results.map((result, i) => {
     if (result.status === 'rejected') {
@@ -429,6 +436,16 @@ async function refreshSignals() {
         <p class="small">Bougies clôturées de 5 minutes</p>
       </div>`;
   }).join('');
+
+  const mode = document.getElementById('trading-mode')?.value;
+
+  if (
+    sessionActive &&
+    mode === 'automatic' &&
+    typeof runAutomaticStrategy === 'function'
+  ) {
+    runAutomaticStrategy(latestAnalyses);
+  }
 }
 
 refreshSignals();
