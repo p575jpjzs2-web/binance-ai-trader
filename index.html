@@ -53,7 +53,36 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
 <p class="small">Les signaux sont indicatifs et ne garantissent aucun bénéfice.</p>
 </div>
 </section>
-<section id="wallet" class="page"><h2>Portefeuille simulé</h2><div class="card"><div class="kicker">Valeur totale</div><div class="value">$50.00</div><p class="small">Aucune position ouverte.</p><button class="secondary" onclick="alert('Le trading simulé sera activé dans une prochaine étape.')">Voir les transactions</button></div></section>
+<section id="wallet" class="page">
+  <h2>Portefeuille et sessions</h2>
+
+  <div class="card">
+    <h3>Nouvelle session de trading</h3>
+    <p class="small">Choisis le capital que tu autorises pour cette session.</p>
+
+    <label for="session-capital">Capital initial (USDT)</label>
+    <input id="session-capital" type="number" min="1" step="0.01" value="20">
+
+    <button onclick="startSession()">Démarrer le robot</button>
+    <button class="secondary" onclick="stopSession()">Arrêter le robot</button>
+
+    <p id="session-status" class="small">Robot arrêté</p>
+  </div>
+
+  <div class="card">
+    <h3>Ma session</h3>
+    <p>Capital autorisé : <b id="session-budget">0.00 USDT</b></p>
+    <p>Bénéfices : <b id="session-profit">0.00 USDT</b></p>
+    <p>Pertes : <b id="session-loss">0.00 USDT</b></p>
+    <p>État : <b id="session-state">Arrêté</b></p>
+  </div>
+
+  <div class="card">
+    <h3>Réserve de bénéfices</h3>
+    <p id="profit-reserve">0.00 USDT</p>
+    <p class="small">Les bénéfices restent séparés. Tu décides seul de les réinvestir.</p>
+  </div>
+</section>
 <section id="settings" class="page"><h2>Paramètres et sécurité</h2><div class="card"><div class="row"><span>Marché</span><b>Spot uniquement</b></div><hr style="border:0;border-top:1px solid var(--line)"><div class="row"><span>Positions simultanées</span><b>2 maximum</b></div><hr style="border:0;border-top:1px solid var(--line)"><div class="row"><span>Risque cible / transaction</span><b>1% du capital</b></div><hr style="border:0;border-top:1px solid var(--line)"><div class="row"><span>Perte journalière maximale</span><b>2%</b></div><p class="small">Ces limites sont des paramètres de démonstration, pas encore un système de protection actif.</p><div class="notice">Aucune clé API n'est utilisée. Ne partage jamais ton secret Binance. Les retraits ne seront jamais autorisés.</div></div></section>
 <footer>Binance AI Trader · Prototype 0.1 · Simulation uniquement</footer>
 </main>
