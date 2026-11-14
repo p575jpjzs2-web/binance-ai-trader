@@ -533,11 +533,13 @@ function simulatedBuy() {
   const quantity = amount / price;
 
   simulatedPositions.push({
-    symbol: symbol,
-    quantity: quantity,
-    entryPrice: price,
-    cost: totalCost
-  });
+  symbol: symbol,
+  quantity: quantity,
+  entryPrice: price,
+  cost: totalCost,
+  highestPrice: price,
+  trailingActive: false
+});
 
   sessionCash -= totalCost;
 
