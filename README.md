@@ -1,1 +1,1 @@
-# binance-ai-trader
+# TradeSense-Allalou 
