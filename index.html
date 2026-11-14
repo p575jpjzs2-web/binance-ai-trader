@@ -97,73 +97,167 @@ async function refreshPrices() {
 }
 refreshPrices();
 setInterval(refreshPrices, 2000);
-// MOTEUR D'ANALYSE TECHNIQUE - SPOT
-function ema(values, period) {
+
+// MOTEUR D'ANALYSE TECHNIQUE V0.3
+
+function emaSeries(values, period) {
+  if (values.length < period) return [];
+  const result = [];
+  let sum = 0;
+
+  for (let i = 0; i < period; i++) sum += values[i];
+
+  let previous = sum / period;
+  result.push(previous);
+
   const k = 2 / (period + 1);
-  let result = values[0];
-  for (let i = 1; i < values.length; i++) {
-    result = values[i] * k + result * (1 - k);
+
+  for (let i = period; i < values.length; i++) {
+    previous = values[i] * k + previous * (1 - k);
+    result.push(previous);
   }
+
   return result;
 }
 
 function calculateRSI(values, period = 14) {
-  let gains = 0, losses = 0;
-  for (let i = values.length - period; i < values.length; i++) {
+  if (values.length <= period) return 50;
+
+  let gains = 0;
+  let losses = 0;
+
+  for (let i = 1; i <= period; i++) {
     const diff = values[i] - values[i - 1];
-    if (diff > 0) gains += diff;
-    else losses -= diff;
+    gains += Math.max(diff, 0);
+    losses += Math.max(-diff, 0);
   }
-  if (losses === 0) return 100;
-  const rs = (gains / period) / (losses / period);
+
+  let avgGain = gains / period;
+  let avgLoss = losses / period;
+
+  for (let i = period + 1; i < values.length; i++) {
+    const diff = values[i] - values[i - 1];
+    avgGain = (avgGain * (period - 1) + Math.max(diff, 0)) / period;
+    avgLoss = (avgLoss * (period - 1) + Math.max(-diff, 0)) / period;
+  }
+
+  if (avgLoss === 0) return avgGain === 0 ? 50 : 100;
+
+  const rs = avgGain / avgLoss;
   return 100 - (100 / (1 + rs));
 }
 
 async function analyzeCoin(symbol) {
-  const url = 'https://data-api.binance.vision/api/v3/klines?symbol='
-    + symbol + '&interval=5m&limit=100';
+  const url =
+    'https://data-api.binance.vision/api/v3/klines?symbol=' +
+    symbol + '&interval=5m&limit=120';
 
   const response = await fetch(url, {cache:'no-store'});
   if (!response.ok) throw new Error('Données indisponibles');
 
   const candles = await response.json();
-  const closes = candles.map(c => Number(c[4]));
-  const volumes = candles.map(c => Number(c[5]));
+
+  // Ignorer la dernière bougie encore en formation
+  const closedCandles = candles.slice(0, -1);
+
+  if (closedCandles.length < 60) {
+    throw new Error('Historique insuffisant');
+  }
+
+  const closes = closedCandles.map(c => Number(c[4]));
+  const volumes = closedCandles.map(c => Number(c[5]));
 
   const price = closes[closes.length - 1];
   const rsi = calculateRSI(closes);
-  const ema20 = ema(closes.slice(-40), 20);
-  const ema50 = ema(closes, 50);
 
-  const fast = closes.map((v, i) => ema(closes.slice(0, i + 1), 12));
-  const slow = closes.map((v, i) => ema(closes.slice(0, i + 1), 26));
-  const macd = fast.map((v, i) => v - slow[i]);
-  const macdSignal = ema(macd.slice(-35), 9);
-  const histogram = macd[macd.length - 1] - macdSignal;
+  const ema20Series = emaSeries(closes, 20);
+  const ema50Series = emaSeries(closes, 50);
 
-  const avgVolume = volumes.slice(-21, -1).reduce((a,b) => a+b, 0) / 20;
-  const volumeRatio = volumes[volumes.length - 1] / avgVolume;
+  const ema20 = ema20Series[ema20Series.length - 1];
+  const ema50 = ema50Series[ema50Series.length - 1];
 
-  let score = 0;
-  if (rsi > 50 && rsi < 68) score++;
-  if (ema20 > ema50) score++;
-  if (histogram > 0) score++;
-  if (volumeRatio > 1.1) score++;
+  // MACD 12 / 26 / 9
+  const fast = emaSeries(closes, 12);
+  const slow = emaSeries(closes, 26);
 
-  let signal = 'ATTENDRE';
-  if (score >= 3) signal = 'ACHETER';
-  else if (rsi < 40 && ema20 < ema50 && histogram < 0) {
-    signal = 'VENDRE / ÉVITER';
+  const macd = [];
+
+  for (let i = 0; i < slow.length; i++) {
+    macd.push(fast[i + 14] - slow[i]);
   }
 
-  return {symbol, price, rsi, ema20, ema50, histogram, volumeRatio, score, signal};
+  const signalSeries = emaSeries(macd, 9);
+  const histogram =
+    macd[macd.length - 1] -
+    signalSeries[signalSeries.length - 1];
+
+  // Volume de la dernière bougie clôturée
+  const previousVolumes = volumes.slice(-21, -1);
+  const avgVolume =
+    previousVolumes.reduce((a, b) => a + b, 0) /
+    previousVolumes.length;
+
+  const lastVolume = volumes[volumes.length - 1];
+  const volumeRatio = avgVolume > 0 ? lastVolume / avgVolume : 0;
+  const volumeConfirmed = volumeRatio >= 1.1;
+
+  const bullish = [
+    rsi > 50 && rsi < 68,
+    ema20 > ema50,
+    histogram > 0,
+    volumeConfirmed
+  ];
+
+  const bearish = [
+    rsi < 45,
+    ema20 < ema50,
+    histogram < 0,
+    volumeConfirmed
+  ];
+
+  const bullishScore = bullish.filter(Boolean).length;
+  const bearishScore = bearish.filter(Boolean).length;
+
+  let signal = 'ATTENDRE';
+  let score = Math.max(bullishScore, bearishScore);
+
+  if (
+    bullishScore >= 3 &&
+    volumeConfirmed &&
+    ema20 > ema50 &&
+    histogram > 0
+  ) {
+    signal = 'ACHETER';
+  } else if (
+    bearishScore >= 3 &&
+    volumeConfirmed &&
+    ema20 < ema50 &&
+    histogram < 0
+  ) {
+    signal = 'BAISSE / ÉVITER';
+  }
+
+  return {
+    symbol,
+    price,
+    rsi,
+    ema20,
+    ema50,
+    histogram,
+    volumeRatio,
+    bullishScore,
+    bearishScore,
+    score,
+    signal
+  };
 }
 
 async function refreshSignals() {
   const container = document.getElementById('signals-list');
   if (!container) return;
 
-  container.innerHTML = '<p class="small">Analyse des marchés en cours...</p>';
+  container.innerHTML =
+    '<p class="small">Analyse des marchés en cours...</p>';
 
   const results = await Promise.allSettled(
     symbols.map(symbol => analyzeCoin(symbol))
@@ -176,8 +270,10 @@ async function refreshSignals() {
     }
 
     const a = result.value;
-    const color = a.signal === 'ACHETER' ? 'positive' :
-      a.signal === 'ATTENDRE' ? '' : 'negative';
+
+    const color =
+      a.signal === 'ACHETER' ? 'positive' :
+      a.signal === 'BAISSE / ÉVITER' ? 'negative' : '';
 
     return `
       <div class="card">
@@ -186,11 +282,14 @@ async function refreshSignals() {
           <strong class="${color}">${a.signal}</strong>
         </div>
         <p class="small">Prix : ${money(a.price)}</p>
-        <p class="small">RSI : ${a.rsi.toFixed(1)} · EMA20 : ${money(a.ema20)}</p>
+        <p class="small">RSI 14 : ${a.rsi.toFixed(1)}</p>
+        <p class="small">EMA20 : ${money(a.ema20)}</p>
         <p class="small">EMA50 : ${money(a.ema50)}</p>
         <p class="small">MACD : ${a.histogram.toFixed(5)}</p>
         <p class="small">Volume : ${a.volumeRatio.toFixed(2)} fois la moyenne</p>
-        <p class="small">Confluence : ${a.score}/4 · Bougies 5 minutes</p>
+        <p class="small">Confluence haussière : ${a.bullishScore}/4</p>
+        <p class="small">Confluence baissière : ${a.bearishScore}/4</p>
+        <p class="small">Bougies clôturées de 5 minutes</p>
       </div>`;
   }).join('');
 }
