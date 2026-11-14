@@ -101,6 +101,7 @@ function money(value) {
   return '$' + n.toLocaleString('en-US', {minimumFractionDigits: n < 1 ? 4 : 2, maximumFractionDigits: n < 1 ? 6 : 2});
 }
 function updateTicker(item) {
+  currentPrices[item.symbol] = Number(item.lastPrice);
   const price = money(item.lastPrice);
   const change = Number(item.priceChangePercent);
   const pct = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
