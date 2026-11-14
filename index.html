@@ -357,11 +357,17 @@ setInterval(refreshSignals, 60000);
 
 // GESTION DES SESSIONS DE TRADING - SIMULATION
 
+// GESTION DES SESSIONS DE TRADING - SIMULATION
+
 let sessionActive = false;
 let sessionCapital = 0;
+let sessionCash = 0;
 let sessionProfit = 0;
 let sessionLoss = 0;
 let profitReserve = 0;
+
+const simulatedPositions = [];
+const SIMULATION_FEE = 0.001; // Frais estimés : 0,1 % par transaction
 
 function startSession() {
   const amount = Number(document.getElementById('session-capital').value);
@@ -376,7 +382,13 @@ function startSession() {
     return;
   }
 
+  if (simulatedPositions.length > 0) {
+    alert('Vends d’abord tes positions ouvertes avant de démarrer une nouvelle session.');
+    return;
+  }
+
   sessionCapital = amount;
+  sessionCash = amount;
   sessionProfit = 0;
   sessionLoss = 0;
   sessionActive = true;
@@ -387,6 +399,103 @@ function startSession() {
 function stopSession() {
   sessionActive = false;
   updateSessionDisplay();
+}
+
+function simulatedBuy() {
+  if (!sessionActive) {
+    alert('Démarre une session avant d’acheter.');
+    return;
+  }
+
+  const symbol = document.getElementById('buy-crypto').value;
+  const amount = Number(document.getElementById('buy-amount').value);
+  const price = Number(currentPrices[symbol]);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert('Entre un montant valide.');
+    return;
+  }
+
+  if (!Number.isFinite(price) || price <= 0) {
+    alert('Le prix de cette crypto est momentanément indisponible.');
+    return;
+  }
+
+  if (simulatedPositions.some(p => p.symbol === symbol)) {
+    alert('Tu as déjà une position ouverte sur cette crypto.');
+    return;
+  }
+
+  const buyFee = amount * SIMULATION_FEE;
+  const totalCost = amount + buyFee;
+
+  if (totalCost > sessionCash) {
+    alert('Solde insuffisant, frais compris.');
+    return;
+  }
+
+  const quantity = amount / price;
+
+  simulatedPositions.push({
+    symbol: symbol,
+    quantity: quantity,
+    entryPrice: price,
+    cost: totalCost
+  });
+
+  sessionCash -= totalCost;
+
+  document.getElementById('buy-status').textContent =
+    'Achat simulé de ' + (names[symbol] || symbol) +
+    ' effectué à ' + price + ' USDT.';
+
+  document.getElementById('buy-amount').value = '';
+
+  updateSessionDisplay();
+  renderOpenPositions();
+}
+
+function simulatedSell(symbol) {
+  const index = simulatedPositions.findIndex(p => p.symbol === symbol);
+
+  if (index === -1) {
+    alert('Aucune position à vendre.');
+    return;
+  }
+
+  const position = simulatedPositions[index];
+  const price = Number(currentPrices[symbol]);
+
+  if (!Number.isFinite(price) || price <= 0) {
+    alert('Prix indisponible. Réessaie.');
+    return;
+  }
+
+  const grossSale = position.quantity * price;
+  const sellFee = grossSale * SIMULATION_FEE;
+  const netSale = grossSale - sellFee;
+  const result = netSale - position.cost;
+
+  if (result >= 0) {
+    // Le capital initial investi retourne dans le solde.
+    // Le bénéfice va dans la réserve séparée.
+    sessionCash += position.cost;
+    profitReserve += result;
+    sessionProfit += result;
+  } else {
+    // En cas de perte, seul le montant récupéré retourne au solde.
+    sessionCash += netSale;
+    sessionLoss += Math.abs(result);
+  }
+
+  simulatedPositions.splice(index, 1);
+
+  document.getElementById('buy-status').textContent =
+    'Vente simulée : ' + (names[symbol] || symbol) +
+    ' — résultat net : ' + result.toFixed(4) + ' USDT.';
+
+  updateSessionDisplay();
+  renderOpenPositions();
 }
 
 function updateSessionDisplay() {
@@ -403,10 +512,50 @@ function updateSessionDisplay() {
     sessionActive ? 'En cours' : 'Arrêté';
 
   document.getElementById('session-status').textContent =
-    sessionActive ? 'Session de simulation active' : 'Robot arrêté';
+    (sessionActive ? 'Session active' : 'Robot arrêté') +
+    ' — Solde disponible : ' + sessionCash.toFixed(2) + ' USDT';
 
   document.getElementById('profit-reserve').textContent =
     profitReserve.toFixed(2) + ' USDT';
 }
+
+function renderOpenPositions() {
+  const container = document.getElementById('open-positions');
+
+  if (!container) return;
+
+  if (simulatedPositions.length === 0) {
+    container.innerHTML = '<p class="small">Aucune position ouverte.</p>';
+    return;
+  }
+
+  container.innerHTML = simulatedPositions.map(position => {
+    const price = Number(currentPrices[position.symbol]);
+    const currentValue = position.quantity * price;
+    const estimatedSellFee = currentValue * SIMULATION_FEE;
+    const estimatedResult =
+      currentValue - estimatedSellFee - position.cost;
+
+    return `
+      <div class="card">
+        <h3>${names[position.symbol] || position.symbol}</h3>
+        <p>Prix d'achat : ${position.entryPrice.toFixed(4)} USDT</p>
+        <p>Prix actuel : ${price.toFixed(4)} USDT</p>
+        <p>Quantité : ${position.quantity.toFixed(8)}</p>
+        <p>Résultat estimé après frais :
+          ${estimatedResult.toFixed(4)} USDT
+        </p>
+        <button onclick="simulatedSell('${position.symbol}')">
+          Vendre
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+// Actualise l'affichage des positions avec les prix du marché.
+renderOpenPositions();
+setInterval(renderOpenPositions, 2000);
+
 </script>
 </body></html>
