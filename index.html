@@ -97,5 +97,105 @@ async function refreshPrices() {
 }
 refreshPrices();
 setInterval(refreshPrices, 2000);
+// MOTEUR D'ANALYSE TECHNIQUE - SPOT
+function ema(values, period) {
+  const k = 2 / (period + 1);
+  let result = values[0];
+  for (let i = 1; i < values.length; i++) {
+    result = values[i] * k + result * (1 - k);
+  }
+  return result;
+}
+
+function calculateRSI(values, period = 14) {
+  let gains = 0, losses = 0;
+  for (let i = values.length - period; i < values.length; i++) {
+    const diff = values[i] - values[i - 1];
+    if (diff > 0) gains += diff;
+    else losses -= diff;
+  }
+  if (losses === 0) return 100;
+  const rs = (gains / period) / (losses / period);
+  return 100 - (100 / (1 + rs));
+}
+
+async function analyzeCoin(symbol) {
+  const url = 'https://data-api.binance.vision/api/v3/klines?symbol='
+    + symbol + '&interval=5m&limit=100';
+
+  const response = await fetch(url, {cache:'no-store'});
+  if (!response.ok) throw new Error('Données indisponibles');
+
+  const candles = await response.json();
+  const closes = candles.map(c => Number(c[4]));
+  const volumes = candles.map(c => Number(c[5]));
+
+  const price = closes[closes.length - 1];
+  const rsi = calculateRSI(closes);
+  const ema20 = ema(closes.slice(-40), 20);
+  const ema50 = ema(closes, 50);
+
+  const fast = closes.map((v, i) => ema(closes.slice(0, i + 1), 12));
+  const slow = closes.map((v, i) => ema(closes.slice(0, i + 1), 26));
+  const macd = fast.map((v, i) => v - slow[i]);
+  const macdSignal = ema(macd.slice(-35), 9);
+  const histogram = macd[macd.length - 1] - macdSignal;
+
+  const avgVolume = volumes.slice(-21, -1).reduce((a,b) => a+b, 0) / 20;
+  const volumeRatio = volumes[volumes.length - 1] / avgVolume;
+
+  let score = 0;
+  if (rsi > 50 && rsi < 68) score++;
+  if (ema20 > ema50) score++;
+  if (histogram > 0) score++;
+  if (volumeRatio > 1.1) score++;
+
+  let signal = 'ATTENDRE';
+  if (score >= 3) signal = 'ACHETER';
+  else if (rsi < 40 && ema20 < ema50 && histogram < 0) {
+    signal = 'VENDRE / ÉVITER';
+  }
+
+  return {symbol, price, rsi, ema20, ema50, histogram, volumeRatio, score, signal};
+}
+
+async function refreshSignals() {
+  const container = document.getElementById('signals-list');
+  if (!container) return;
+
+  container.innerHTML = '<p class="small">Analyse des marchés en cours...</p>';
+
+  const results = await Promise.allSettled(
+    symbols.map(symbol => analyzeCoin(symbol))
+  );
+
+  container.innerHTML = results.map((result, i) => {
+    if (result.status === 'rejected') {
+      return '<div class="card"><b>' + names[symbols[i]] +
+        '</b><p class="small">Analyse indisponible</p></div>';
+    }
+
+    const a = result.value;
+    const color = a.signal === 'ACHETER' ? 'positive' :
+      a.signal === 'ATTENDRE' ? '' : 'negative';
+
+    return `
+      <div class="card">
+        <div class="row">
+          <b>${names[a.symbol]}/USDT</b>
+          <strong class="${color}">${a.signal}</strong>
+        </div>
+        <p class="small">Prix : ${money(a.price)}</p>
+        <p class="small">RSI : ${a.rsi.toFixed(1)} · EMA20 : ${money(a.ema20)}</p>
+        <p class="small">EMA50 : ${money(a.ema50)}</p>
+        <p class="small">MACD : ${a.histogram.toFixed(5)}</p>
+        <p class="small">Volume : ${a.volumeRatio.toFixed(2)} fois la moyenne</p>
+        <p class="small">Confluence : ${a.score}/4 · Bougies 5 minutes</p>
+      </div>`;
+  }).join('');
+}
+
+refreshSignals();
+setInterval(refreshSignals, 60000);
 </script>
 </body></html>
