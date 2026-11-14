@@ -325,5 +325,59 @@ async function refreshSignals() {
 
 refreshSignals();
 setInterval(refreshSignals, 60000);
+
+// GESTION DES SESSIONS DE TRADING - SIMULATION
+
+let sessionActive = false;
+let sessionCapital = 0;
+let sessionProfit = 0;
+let sessionLoss = 0;
+let profitReserve = 0;
+
+function startSession() {
+  const amount = Number(document.getElementById('session-capital').value);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert('Entre un capital valide.');
+    return;
+  }
+
+  if (sessionActive) {
+    alert('Une session est déjà en cours.');
+    return;
+  }
+
+  sessionCapital = amount;
+  sessionProfit = 0;
+  sessionLoss = 0;
+  sessionActive = true;
+
+  updateSessionDisplay();
+}
+
+function stopSession() {
+  sessionActive = false;
+  updateSessionDisplay();
+}
+
+function updateSessionDisplay() {
+  document.getElementById('session-budget').textContent =
+    sessionCapital.toFixed(2) + ' USDT';
+
+  document.getElementById('session-profit').textContent =
+    sessionProfit.toFixed(2) + ' USDT';
+
+  document.getElementById('session-loss').textContent =
+    sessionLoss.toFixed(2) + ' USDT';
+
+  document.getElementById('session-state').textContent =
+    sessionActive ? 'En cours' : 'Arrêté';
+
+  document.getElementById('session-status').textContent =
+    sessionActive ? 'Session de simulation active' : 'Robot arrêté';
+
+  document.getElementById('profit-reserve').textContent =
+    profitReserve.toFixed(2) + ' USDT';
+}
 </script>
 </body></html>
