@@ -39,7 +39,20 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
 <h2>Dernier signal</h2><div class="card signal wait"><div class="row"><strong>BTC / USDT</strong><span class="pill">ATTENDRE</span></div><p class="small">Exemple pédagogique : attendre une confirmation de tendance. Ce signal n'est pas une recommandation d'investissement.</p></div>
 </section>
 <section id="market" class="page"><h2>Marché</h2><div class="card"><table><tr><td><b>BTC/USDT</b><div class="small">Bitcoin</div></td><td><strong id="BTCUSDT">Connexion…</strong><br><span id="BTCUSDT-pct" class="small">—</span></td></tr><tr><td><b>ETH/USDT</b><div class="small">Ethereum</div></td><td><strong id="ETHUSDT">Connexion…</strong><br><span id="ETHUSDT-pct" class="small">—</span></td></tr><tr><td><b>BNB/USDT</b><div class="small">BNB</div></td><td><strong id="BNBUSDT">Connexion…</strong><br><span id="BNBUSDT-pct" class="small">—</span></td></tr><tr><td><b>SOL/USDT</b><div class="small">Solana</div></td><td><strong id="SOLUSDT">Connexion…</strong><br><span id="SOLUSDT-pct" class="small">—</span></td></tr><tr><td><b>XRP/USDT</b><div class="small">XRP</div></td><td><strong id="XRPUSDT">Connexion…</strong><br><span id="XRPUSDT-pct" class="small">—</span></td></tr></table><p id="market-status" class="small">Connexion aux données publiques Binance… Actualisation toutes les 2 secondes.</p></div></section>
-<section id="signals" class="page"><h2>Signaux IA</h2><div class="card signal wait"><div class="row"><b>BTC/USDT</b><span class="pill">ATTENDRE</span></div><p class="small">Signal de démonstration · Confiance non calculée.</p><div class="row small"><span>Entrée : —</span><span>Stop-loss : —</span><span>Take-profit : —</span></div></div><div class="card"><b>Comment lire les signaux ?</b><p class="small">ACHETER, VENDRE ou ATTENDRE seront calculés à partir d'indicateurs et de règles testées. L'IA ne garantit jamais un résultat positif.</p></div></section>
+<section id="signals" class="page">
+<h2>Signaux de trading</h2>
+<div class="card">
+<p class="small">Analyse technique Binance Spot.</p>
+<div id="signals-list">
+<p class="small">Chargement des analyses...</p>
+</div>
+</div>
+<div class="card">
+<b>Indicateurs utilisés</b>
+<p class="small">RSI 14 · EMA 20/50 · MACD · Volume</p>
+<p class="small">Les signaux sont indicatifs et ne garantissent aucun bénéfice.</p>
+</div>
+</section>
 <section id="wallet" class="page"><h2>Portefeuille simulé</h2><div class="card"><div class="kicker">Valeur totale</div><div class="value">$50.00</div><p class="small">Aucune position ouverte.</p><button class="secondary" onclick="alert('Le trading simulé sera activé dans une prochaine étape.')">Voir les transactions</button></div></section>
 <section id="settings" class="page"><h2>Paramètres et sécurité</h2><div class="card"><div class="row"><span>Marché</span><b>Spot uniquement</b></div><hr style="border:0;border-top:1px solid var(--line)"><div class="row"><span>Positions simultanées</span><b>2 maximum</b></div><hr style="border:0;border-top:1px solid var(--line)"><div class="row"><span>Risque cible / transaction</span><b>1% du capital</b></div><hr style="border:0;border-top:1px solid var(--line)"><div class="row"><span>Perte journalière maximale</span><b>2%</b></div><p class="small">Ces limites sont des paramètres de démonstration, pas encore un système de protection actif.</p><div class="notice">Aucune clé API n'est utilisée. Ne partage jamais ton secret Binance. Les retraits ne seront jamais autorisés.</div></div></section>
 <footer>Binance AI Trader · Prototype 0.1 · Simulation uniquement</footer>
