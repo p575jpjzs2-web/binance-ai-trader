@@ -69,6 +69,33 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
     <p id="session-status" class="small">Robot arrêté</p>
   </div>
 
+<div class="card">
+  <h3>Achat de cryptomonnaies</h3>
+
+  <label for="buy-crypto">Choisir une crypto</label>
+  <select id="buy-crypto">
+    <option value="BTCUSDT">Bitcoin (BTC)</option>
+    <option value="ETHUSDT">Ethereum (ETH)</option>
+    <option value="BNBUSDT">BNB</option>
+    <option value="SOLUSDT">Solana (SOL)</option>
+    <option value="XRPUSDT">XRP</option>
+  </select>
+
+  <label for="buy-amount">Montant à investir (USDT)</label>
+  <input id="buy-amount" type="number" min="1" step="0.01" placeholder="Exemple : 10">
+
+  <button onclick="simulatedBuy()">Acheter (simulation)</button>
+
+  <p id="buy-status" class="small">En attente d'un achat.</p>
+</div>
+
+<div class="card">
+  <h3>Mes positions ouvertes</h3>
+  <div id="open-positions">
+    <p class="small">Aucune position ouverte.</p>
+  </div>
+</div>
+
   <div class="card">
     <h3>Ma session</h3>
     <p>Capital autorisé : <b id="session-budget">0.00 USDT</b></p>
