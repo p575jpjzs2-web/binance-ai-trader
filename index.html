@@ -110,7 +110,86 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
     <p class="small">Les bénéfices restent séparés. Tu décides seul de les réinvestir.</p>
   </div>
 </section>
-<section id="settings" class="page"><h2>Paramètres et sécurité</h2><div class="card"><div class="row"><span>Marché</span><b>Spot uniquement</b></div><hr style="border:0;border-top:1px solid var(--line)"><div class="row"><span>Positions simultanées</span><b>2 maximum</b></div><hr style="border:0;border-top:1px solid var(--line)"><div class="row"><span>Risque cible / transaction</span><b>1% du capital</b></div><hr style="border:0;border-top:1px solid var(--line)"><div class="row"><span>Perte journalière maximale</span><b>2%</b></div><p class="small">Ces limites sont des paramètres de démonstration, pas encore un système de protection actif.</p><div class="notice">Aucune clé API n'est utilisée. Ne partage jamais ton secret Binance. Les retraits ne seront jamais autorisés.</div></div></section>
+
+<section id="settings" class="page">
+  <h2>Paramètres et sécurité</h2>
+
+  <div class="card">
+    <h3>Mode de fonctionnement</h3>
+
+    <label for="trading-mode">Choisir le mode</label>
+    <select id="trading-mode">
+      <option value="surveillance">Surveillance — Signaux et notifications</option>
+      <option value="automatic">Automatique — Simulation des achats et ventes</option>
+    </select>
+
+    <p class="small">
+      Le mode automatique effectuera uniquement des opérations simulées.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Stratégie de vente</h3>
+
+    <div class="row">
+      <span>Perte maximale par position</span>
+      <b>10 %</b>
+    </div>
+
+    <hr>
+
+    <div class="row">
+      <span>Trailing stop après bénéfice net</span>
+      <b>2 %</b>
+    </div>
+
+    <hr>
+
+    <div class="row">
+      <span>Vente au retour au bénéfice</span>
+      <b>Activée</b>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Gestion du risque</h3>
+
+    <div class="row">
+      <span>Marché</span>
+      <b>Spot uniquement</b>
+    </div>
+
+    <hr>
+
+    <div class="row">
+      <span>Positions simultanées</span>
+      <b>2 maximum</b>
+    </div>
+
+    <hr>
+
+    <div class="row">
+      <span>Risque cible par transaction</span>
+      <b>1 % du capital</b>
+    </div>
+
+    <hr>
+
+    <div class="row">
+      <span>Perte journalière maximale</span>
+      <b>2 %</b>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Sécurité</h3>
+    <div class="notice">
+      Aucune clé API n'est utilisée actuellement.
+      Aucun ordre réel n'est envoyé à Binance.
+      Les retraits ne seront jamais autorisés.
+    </div>
+  </div>
+</section>
 <footer>Binance AI Trader · Prototype 0.1 · Simulation uniquement</footer>
 </main>
 <nav>
