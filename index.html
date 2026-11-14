@@ -95,6 +95,7 @@ document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()
 // Cours publics Binance Spot : aucune clé API et aucun accès au compte.
 const symbols = ['BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','XRPUSDT'];
 const names = {BTCUSDT:'BTC',ETHUSDT:'ETH',BNBUSDT:'BNB',SOLUSDT:'SOL',XRPUSDT:'XRP'};
+const currentPrices = {};
 function money(value) {
   const n = Number(value);
   return '$' + n.toLocaleString('en-US', {minimumFractionDigits: n < 1 ? 4 : 2, maximumFractionDigits: n < 1 ? 6 : 2});
