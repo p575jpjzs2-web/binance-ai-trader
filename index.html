@@ -193,7 +193,12 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
 <footer>Binance AI Trader · Prototype 0.1 · Simulation uniquement</footer>
 </main>
 <nav>
-<button class="active" data-page="home"><span>⌂</span>Accueil</button><button data-page="market"><span>▥</span>Marché</button><button data-page="signals"><span>⌁</span>Signaux</button><button data-page="wallet"><span>◫</span>Portefeuille</button><button <button data-page="longterm"><span>◇</span>Long terme</button>data-page="settings"><span>⚙</span>Réglages</button>
+<button class="active" data-page="home"><span>⌂</span>Accueil</button>
+<button data-page="market"><span>▥</span>Marché</button>
+<button data-page="signals"><span>⌁</span>Signaux</button>
+<button data-page="wallet"><span>◫</span>Portefeuille</button>
+<button data-page="longterm"><span>◇</span>Long terme</button>
+<button data-page="settings"><span>⚙</span>Réglages</button>
 </nav>
 <script>
 document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('section.page').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.page).classList.add('active');}));
